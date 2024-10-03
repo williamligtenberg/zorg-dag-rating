@@ -132,11 +132,12 @@ def calculate_report_score(report):
 # Bereken de scores voor alle rapportages
 daily_scores = [calculate_report_score(report) for report in reports]
 
-# Normaliseer de scores (optioneel, als je een specifieke schaal wilt)
+# Normaliseer de scores (omgekeerd: hoge score = goede dag)
 def normalize_scores(scores):
-    max_score = max(scores)
-    min_score = min(scores)
-    return [(score - min_score) / (max_score - min_score) * 10 for score in scores]
+    max_score = max(scores)  # Bepaal de maximale score
+    min_score = min(scores)  # Bepaal de minimale score
+    normalized = [(score - min_score) / (max_score - min_score) * 10 for score in scores]
+    return [10 - score for score in normalized]  # Draai de score om: hoge score = goede dag
 
 normalized_scores = normalize_scores(daily_scores)
 
