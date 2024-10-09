@@ -4,6 +4,7 @@ from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 import numpy as np
 import matplotlib.pyplot as plt
+import pandas as pd
 
 # Download NLTK data (indien nodig)
 nltk.download('punkt')
@@ -11,93 +12,14 @@ nltk.download('stopwords')
 nltk.download('wordnet')
 
 # Woordenlijst met negatieve woorden en hun gewicht
-negative_word_scores = {
-    'koorts': 10,
-    'pijn': 8,
-    'vermoeid': 6,
-    'misselijk': 7,
-    'hoofdpijn': 5,
-    'moe': 4,
-    'zwakte': 7,
-    'koud': 3,
-    'benauwd': 9,
-    'duizelig': 6,
-    'griep': 10,
-    'verkoudheid': 5,
-    'migraine': 9,
-    'slecht': 4,
-    'suf': 4,
-    'braken': 9,
-    'buikpijn': 8,
-    'diarree': 7,
-    'verward': 7,
-    'kortademig': 9,
-    'hoesten': 6,
-    'kramp': 7,
-    'druk': 5,
-    'zweten': 5,
-    'spierpijn': 7,
-    'rillingen': 6,
-    'traag': 4,
-    'stress': 6,
-    'angst': 8,
-    'slapeloosheid': 7,
-    'benauwdheid': 9,
-    'tintelingen': 6,
-    'flauwte': 8,
-    'ademnood': 9,
-    'verkramping': 8,
-    'kriebelhoest': 5,
-    'lusteloos': 6,
-    'onrustig': 5,
-    'zwelling': 7,
-    'duister': 5,
-    'angstig': 7,
-    'flauwvallen': 9,
-    'bleek': 6,
-    'vermoeidheid': 7,
-    'onwel': 8,
-    'oncomfortabel': 5,
-    'tremoren': 8,
-    'gebrek aan eetlust': 7,
-    'spierzwakte': 7,
-    'trillen': 6,
-    'brandend': 7,
-    'wazig zien': 6,
-    'hoge bloeddruk': 8,
-    'steken': 7,
-    'bleekheid': 6,
-    'irritatie': 5,
-    'samentrekkingen': 7,
-    'uitputting': 8,    
-    'incontinentie': 8,        
-    'val': 10,                 
-    'mobiliteitsproblemen': 7, 
-    'geheugenverlies': 9,      
-    'dementie': 10,            
-    'stijfheid': 6,            
-    'depressie': 8,            
-    'gewichtsverlies': 7,      
-    'verwardheid': 9,          
-    'slaapproblemen': 7,       
-    'dorst': 5,                
-    'drukplekken': 8,          
-    'blaren': 6,               
-    'hoge bloedsuikerspiegel': 9,
-    'inactiviteit': 6,         
-    'artrose': 7,              
-    'onvast': 7,               
-    'kramp in benen': 6,       
-    'hartkloppingen': 9,       
-    'verwarring': 8            
-}
+df = pd.read_csv('negative_word_scores.csv')
+negative_word_scores = dict(zip(df['word'], df['score']))
+
+
 
 # Positieve woorden (als je wilt dat ze een lagere score krijgen)
-positive_word_scores = {
-    'gezond': -5,
-    'fit': -4,
-    'goed': -3,
-}
+df = pd.read_csv('positive_word_scores.csv')
+positive_word_scores = dict(zip(df['word'], df['score']))
 
 # Combineer alle woorden in één woordenboek
 word_scores = {**negative_word_scores, **positive_word_scores}
