@@ -11,15 +11,7 @@ nltk.download('punkt')
 nltk.download('stopwords')
 nltk.download('wordnet')
 
-# Woordenlijst met negatieve woorden en hun gewicht
-df = pd.read_csv('negative_word_scores.csv')
-negative_word_scores = dict(zip(df['word'], df['score']))
 
-
-
-# Positieve woorden (als je wilt dat ze een lagere score krijgen)
-df = pd.read_csv('positive_word_scores.csv')
-positive_word_scores = dict(zip(df['word'], df['score']))
 
 # Combineer alle woorden in één woordenboek
 word_scores = {**negative_word_scores, **positive_word_scores}
