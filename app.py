@@ -5,6 +5,7 @@ from sklearn.svm import SVC
 from sklearn.metrics import classification_report
 from sklearn.pipeline import Pipeline
 from sklearn.model_selection import GridSearchCV
+from accuracy import off_by_one_accuracy
 
 # Data laden vanuit CSV-bestand
 df = pd.read_csv('zorgdata.csv')
@@ -38,6 +39,11 @@ print(f"Beste parameters: {grid.best_params_}")
 
 # Voorspellen op testdata
 y_pred = grid.predict(X_test)
+
+accuracy, off_by_one_accuracy = off_by_one_accuracy(y_test, y_pred)
+
+print("Standard Accuracy:", accuracy)
+print("Off-by-One Accuracy:", off_by_one_accuracy)
 
 # Classificatie rapport tonen
 print(classification_report(y_test, y_pred))
