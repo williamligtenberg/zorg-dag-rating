@@ -13,6 +13,8 @@ df = pd.read_csv('zorgdata.csv')
 # CSV-bestand opslaan
 df.to_csv('zorgdata.csv', index=False)
 
+print(df['score'].value_counts())
+
 # Train-test split
 X_train, X_test, y_train, y_test = train_test_split(df['report'], df['score'], test_size=0.2, random_state=42)
 
@@ -46,4 +48,13 @@ print("Standard Accuracy:", accuracy)
 print("Off-by-One Accuracy:", off_by_one_accuracy)
 
 # Classificatie rapport tonen
-print(classification_report(y_test, y_pred))
+# print(classification_report(y_test, y_pred))
+
+def predict_single_value(report):
+    # Create a DataFrame with just the report
+    mdf = pd.DataFrame({'report': [report]})
+    
+    # Make the prediction
+    y_pred = grid.best_estimator_.predict(mdf['report'])
+    
+    return y_pred[0]
