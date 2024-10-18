@@ -1,4 +1,6 @@
 import pandas as pd
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize
 from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.svm import SVC
@@ -6,6 +8,7 @@ from sklearn.metrics import classification_report
 from sklearn.pipeline import Pipeline
 from sklearn.model_selection import GridSearchCV
 from accuracy import off_by_one_accuracy
+import simplemma
 
 # Data laden vanuit CSV-bestand
 df = pd.read_csv('zorgdata.csv')
@@ -15,8 +18,14 @@ df.to_csv('zorgdata.csv', index=False)
 
 print(df['score'].value_counts())
 
+sws = set(stopwords.words('dutch'))
+
+df['report'] = df['report'].apply(lambda x: ' '.join(simplemma.lemmatize(word, lang='nl') for word in x.split(' ') if word not in sws))
+
+print(df)
+
 # Train-test split
-X_train, X_test, y_train, y_test = train_test_split(df['report'], df['score'], test_size=0.2, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(df['report'], df['score'], test_size=0.2, random_state=90)
 
 # Pipeline met SVM en TfidfVectorizer
 pipeline = Pipeline([
@@ -47,10 +56,11 @@ accuracy, off_by_one_accuracy = off_by_one_accuracy(y_test, y_pred)
 print("Standard Accuracy:", accuracy)
 print("Off-by-One Accuracy:", off_by_one_accuracy)
 
-# Classificatie rapport tonen
-# print(classification_report(y_test, y_pred))
+#Classificatie rapport tonen
+print(classification_report(y_test, y_pred))
 
 def predict_single_value(report):
+    report = ' '.join(simplemma.lemmatize(word, lang='nl') for word in report.split(' ') if word not in sws)
     # Create a DataFrame with just the report
     mdf = pd.DataFrame({'report': [report]})
     
