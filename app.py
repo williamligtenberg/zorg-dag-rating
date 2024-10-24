@@ -9,6 +9,8 @@ from sklearn.pipeline import Pipeline
 from sklearn.model_selection import GridSearchCV
 from accuracy import off_by_one_accuracy
 import simplemma
+import http.server
+import socketserver
 
 # Data laden vanuit CSV-bestand
 df = pd.read_csv('zorgdata.csv')
@@ -68,3 +70,15 @@ def predict_single_value(report):
     y_pred = grid.best_estimator_.predict(mdf['report'])
     
     return y_pred[0]
+
+####### HTTP SERVER
+
+# Define the handler to use for serving files
+Handler = http.server.SimpleHTTPRequestHandler
+
+# Define the port to serve on
+PORT = 8000
+
+with socketserver.TCPServer(("", PORT), Handler) as httpd:
+    print(f"Serving on port {PORT}")
+    httpd.serve_forever()
