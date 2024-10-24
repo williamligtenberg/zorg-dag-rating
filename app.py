@@ -9,8 +9,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.model_selection import GridSearchCV
 from accuracy import off_by_one_accuracy
 import simplemma
-import http.server
-import socketserver
+from flask import Flask, render_template
 
 # Data laden vanuit CSV-bestand
 df = pd.read_csv('zorgdata.csv')
@@ -72,13 +71,19 @@ def predict_single_value(report):
     return y_pred[0]
 
 ####### HTTP SERVER
+# Create a Flask app
+app = Flask(__name__)
 
-# Define the handler to use for serving files
-Handler = http.server.SimpleHTTPRequestHandler
+# Route for the homepage (index)
+@app.route('/')
+def index():
+    return render_template('index.html')
 
-# Define the port to serve on
-PORT = 8000
+# Route for /addReport
+@app.route('/addReport')
+def add_report():
+    return render_template('addReport.html')
 
-with socketserver.TCPServer(("", PORT), Handler) as httpd:
-    print(f"Serving on port {PORT}")
-    httpd.serve_forever()
+if __name__ == '__main__':
+    # Start the server
+    app.run(debug=True)
