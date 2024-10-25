@@ -2,6 +2,7 @@ import pandas as pd
 import sqlite3
 import random
 from datetime import datetime, timedelta
+from datetime import datetime, timedelta
 
 # Stap 1: Laad de CSV-data in een Pandas DataFrame
 df = pd.read_csv("zorgdata.csv")
@@ -28,6 +29,8 @@ CREATE TABLE IF NOT EXISTS rapportages (
     report TEXT,
     score INTEGER,
     datum DATE
+    score INTEGER,
+    datum DATE
 )
 ''')
 
@@ -38,6 +41,8 @@ random_rapportages.to_sql("rapporten_temp", conn, if_exists="replace", index=Fal
 cursor.execute('''
 INSERT INTO rapportages (report, score, datum)
 SELECT report, score, datum FROM rapporten_temp
+INSERT INTO rapportages (report, score, datum)
+SELECT report, score, datum FROM rapporten_temp
 ''')
 
 # Stap 9: Verwijder de tijdelijke tabel
@@ -46,5 +51,7 @@ cursor.execute("DROP TABLE rapporten_temp")
 # Stap 10: Sla wijzigingen op en sluit de verbinding
 conn.commit()
 conn.close()
+
+print("Data uit zorgdata.csv is succesvol geïmporteerd met unieke ID's en datums.")
 
 print("Data uit zorgdata.csv is succesvol geïmporteerd met unieke ID's en datums.")
