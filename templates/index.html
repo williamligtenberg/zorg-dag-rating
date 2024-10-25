@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles.css">
     <title>Rapportages</title>
     <style>
         body {
@@ -37,7 +38,10 @@
 </head>
 <body>
     <h1>Rapportages</h1>
-    
+
+    <!-- Knop om naar de rapportage toevoegpagina te gaan -->
+    <button onclick="window.location.href='/add-report'">Voeg een nieuwe rapportage toe</button>
+
     <div class="chart-container">
         <canvas id="scoreChart"></canvas>
     </div>
@@ -95,8 +99,8 @@
                     onClick: (event) => {
                         const activePoints = scoreChart.getElementsAtEventForMode(event, 'nearest', { intersect: true }, false);
                         if (activePoints.length) {
-                            const index = activePoints[0].index; // index van de aangeklikte staaf
-                            const score = labels[index]; // score op basis van de index
+                            const index = activePoints[0].index;
+                            const score = labels[index];
                             fetchRapportages(score);
                         }
                     }
@@ -112,18 +116,18 @@
 
         function updateRapportagesTable(rapportages) {
             const tbody = document.getElementById('rapportagesTable').getElementsByTagName('tbody')[0];
-            tbody.innerHTML = ''; // Maak de tabel leeg
+            tbody.innerHTML = '';
 
             if (rapportages.length === 0) {
                 const row = tbody.insertRow();
                 const cell = row.insertCell(0);
-                cell.colSpan = 2; // Pas de colspan aan voor de nieuwe tabelstructuur
+                cell.colSpan = 2;
                 cell.innerText = 'Geen rapportages gevonden.';
             } else {
                 rapportages.forEach(rapportage => {
                     const row = tbody.insertRow();
-                    row.insertCell(0).innerText = rapportage.report; // Weergave van het rapport
-                    row.insertCell(1).innerText = rapportage.score;  // Weergave van de score
+                    row.insertCell(0).innerText = rapportage.report;
+                    row.insertCell(1).innerText = rapportage.score;
                 });
             }
         }

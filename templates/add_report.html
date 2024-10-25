@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nieuwe Rapportage Toevoegen</title>
+</head>
+<body>
+    <h1>Voeg een nieuwe rapportage toe</h1>
+    <div>
+        <textarea id="newReport" placeholder="Type hier je nieuwe rapportage..." rows="4" cols="50"></textarea>
+        <button onclick="addRapportage()">Voeg rapportage toe</button>
+    </div>
+
+    <script>
+async function addRapportage() {
+    const newReport = document.getElementById('newReport').value;
+
+    if (newReport.trim() === '') {
+        alert('Vul een geldige rapportage in.');
+        return;
+    }
+
+    const response = await fetch('/add_rapportage', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ report: newReport })
+    });
+
+    const result = await response.json();
+
+    if (result.success) {
+        alert('Rapportage succesvol toegevoegd met berekende score!');
+        document.getElementById('newReport').value = '';  // Reset het invoerveld
+        window.location.href = '/';  // Redirect naar de indexpagina
+    } else {
+        alert('Er was een probleem bij het toevoegen van de rapportage.');
+    }
+}
+    </script>
+</body>
+</html>

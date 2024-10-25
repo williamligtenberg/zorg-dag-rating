@@ -9,7 +9,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.model_selection import GridSearchCV
 from accuracy import off_by_one_accuracy
 import simplemma
-from flask import Flask, render_template
+from flask import Flask, render_template, request, jsonify
 import sqlite3
 
 # Data laden vanuit CSV-bestand
@@ -112,10 +112,37 @@ def rapportages(score):
     conn.close()
     return df.to_json(orient='records')
 
-# Route for /addReport
-@app.route('/addReport')
-def add_report():
-    return render_template('addReport.html')
+@app.route('/add_rapportage', methods=['POST'])
+def add_rapportage():
+    data = request.get_json()
+    report = data.get('report')
+    
+    if not report:
+        return jsonify({'success': False, 'message': 'Ongeldige rapportage.'}), 400
+
+    try:
+        # Voorspel de score van de rapportage met het machine learning-model
+        score = predict_single_value(report)
+        
+        # Converteer score naar int om JSON-serialisatie probleem te vermijden
+        score = int(score)
+        
+        # Voeg de rapportage en de voorspelde score toe aan de database
+        conn = sqlite3.connect('rapportages.db')
+        cursor = conn.cursor()
+        cursor.execute("INSERT INTO rapportages (report, score) VALUES (?, ?)", (report, score))
+        conn.commit()
+        conn.close()
+        
+        return jsonify({'success': True, 'score': score}), 200
+
+    except Exception as e:
+        print("Fout bij toevoegen rapportage:", e)  # Log de fout in de console
+        return jsonify({'success': False, 'message': 'Interne serverfout.'}), 500
+
+@app.route('/add-report')
+def add_report_page():
+    return render_template('add_report.html')
 
 if __name__ == '__main__':
     # Start the server
