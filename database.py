@@ -1,8 +1,12 @@
 import pandas as pd
 import sqlite3
+import random
 
 # Stap 1: Laad de CSV-data in een Pandas DataFrame
 df = pd.read_csv("zorgdata.csv")
+
+# Stap 2: Selecteer willekeurig 84 rapportages
+random_rapportages = df.sample(n=84).reset_index(drop=True)
 
 # Stap 2: Maak verbinding met (of maak) een SQLite-database
 conn = sqlite3.connect("rapportages.db")
@@ -10,7 +14,7 @@ cursor = conn.cursor()
 
 # Stap 3: Maak een nieuwe tabel 'rapporten' met een auto-increment 'id'-kolom
 cursor.execute('''
-CREATE TABLE IF NOT EXISTS rapporten (
+CREATE TABLE IF NOT EXISTS rapportages (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     report TEXT,
     score INTEGER
@@ -18,11 +22,11 @@ CREATE TABLE IF NOT EXISTS rapporten (
 ''')
 
 # Stap 4: Sla de data van de DataFrame op in de tabel, zonder de ID-kolom in te voeren
-df.to_sql("rapporten_temp", conn, if_exists="replace", index=False)
+random_rapportages.to_sql("rapporten_temp", conn, if_exists="replace", index=False)
 
 # Stap 5: Kopieer gegevens van tijdelijke tabel naar definitieve tabel en geef ID's automatisch toe
 cursor.execute('''
-INSERT INTO rapporten (report, score)
+INSERT INTO rapportages (report, score)
 SELECT report, score FROM rapporten_temp
 ''')
 

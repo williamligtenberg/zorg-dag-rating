@@ -10,6 +10,7 @@ from sklearn.model_selection import GridSearchCV
 from accuracy import off_by_one_accuracy
 import simplemma
 from flask import Flask, render_template
+import sqlite3
 
 # Data laden vanuit CSV-bestand
 df = pd.read_csv('zorgdata.csv')
@@ -70,14 +71,46 @@ def predict_single_value(report):
     
     return y_pred[0]
 
+
+
 ####### HTTP SERVER
 # Create a Flask app
 app = Flask(__name__)
 
+def get_data():
+    # Maak verbinding met de SQLite-database
+    conn = sqlite3.connect('rapportages.db')
+    query = "SELECT * FROM rapportages"
+    df = pd.read_sql_query(query, conn)
+    conn.close()
+    return df
+
 # Route for the homepage (index)
 @app.route('/')
 def index():
-    return render_template('index.html')
+    # Haal de gegevens op
+    data = get_data()
+    # Zet de data om naar een lijst van dictionaries
+    rapportages = data.to_dict(orient='records')
+    return render_template('index.html', rapportages=rapportages)
+
+@app.route('/scores')
+def scores():
+    # Maak verbinding met de SQLite-database
+    conn = sqlite3.connect('rapportages.db')
+    query = "SELECT score, COUNT(*) as count FROM rapportages GROUP BY score"
+    df = pd.read_sql_query(query, conn)
+    conn.close()
+    return df.to_json(orient='records')
+
+@app.route('/rapportages/<int:score>')
+def rapportages(score):
+    # Maak verbinding met de SQLite-database
+    conn = sqlite3.connect('rapportages.db')
+    query = "SELECT * FROM rapportages WHERE score = ?"
+    df = pd.read_sql_query(query, conn, params=(score,))
+    conn.close()
+    return df.to_json(orient='records')
 
 # Route for /addReport
 @app.route('/addReport')

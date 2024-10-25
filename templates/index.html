@@ -1,14 +1,134 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="nl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Overview</title>
+    <title>Rapportages</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f9f9f9;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #4CAF50;
+            color: white;
+        }
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+        .chart-container {
+            width: 100%;
+            max-width: 600px;
+            margin: 20px auto;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-    <h1>Overzicht pagina</h1>
-    <a href="/addReport">
-    <button>Rapport toevoegen</button>
-    </a>
+    <h1>Rapportages</h1>
+    
+    <div class="chart-container">
+        <canvas id="scoreChart"></canvas>
+    </div>
+
+    <h2>Rapportages bij geselecteerde score:</h2>
+    <table id="rapportagesTable">
+        <thead>
+            <tr>
+                <th>Rapport</th>
+                <th>Score</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td colspan="2">Klik op een score in de diagram om rapportages te bekijken.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <script>
+        async function fetchScores() {
+            const response = await fetch('/scores');
+            const data = await response.json();
+            return data;
+        }
+
+        async function renderChart() {
+            const scoresData = await fetchScores();
+
+            const labels = [1, 2, 3, 4, 5];
+            const counts = labels.map(label => {
+                const score = scoresData.find(s => s.score === label);
+                return score ? score.count : 0;
+            });
+
+            const ctx = document.getElementById('scoreChart').getContext('2d');
+            const scoreChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Aantal Rapportages',
+                        data: counts,
+                        backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        },
+                    },
+                    onClick: (event) => {
+                        const activePoints = scoreChart.getElementsAtEventForMode(event, 'nearest', { intersect: true }, false);
+                        if (activePoints.length) {
+                            const index = activePoints[0].index; // index van de aangeklikte staaf
+                            const score = labels[index]; // score op basis van de index
+                            fetchRapportages(score);
+                        }
+                    }
+                }
+            });
+        }
+
+        async function fetchRapportages(score) {
+            const response = await fetch(`/rapportages/${score}`);
+            const rapportages = await response.json();
+            updateRapportagesTable(rapportages);
+        }
+
+        function updateRapportagesTable(rapportages) {
+            const tbody = document.getElementById('rapportagesTable').getElementsByTagName('tbody')[0];
+            tbody.innerHTML = ''; // Maak de tabel leeg
+
+            if (rapportages.length === 0) {
+                const row = tbody.insertRow();
+                const cell = row.insertCell(0);
+                cell.colSpan = 2; // Pas de colspan aan voor de nieuwe tabelstructuur
+                cell.innerText = 'Geen rapportages gevonden.';
+            } else {
+                rapportages.forEach(rapportage => {
+                    const row = tbody.insertRow();
+                    row.insertCell(0).innerText = rapportage.report; // Weergave van het rapport
+                    row.insertCell(1).innerText = rapportage.score;  // Weergave van de score
+                });
+            }
+        }
+
+        renderChart();
+    </script>
 </body>
 </html>

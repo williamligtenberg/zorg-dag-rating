@@ -8,4 +8,4 @@ pip install Flask
 
 pip install nltk
 
-SQLite extensie installeren
+SQLite extensie installeren (bovenste)
