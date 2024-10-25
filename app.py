@@ -11,6 +11,7 @@ from accuracy import off_by_one_accuracy
 import simplemma
 from flask import Flask, render_template, request, jsonify
 import sqlite3
+from datetime import datetime, timedelta
 
 # Data laden vanuit CSV-bestand
 df = pd.read_csv('zorgdata.csv')
@@ -94,6 +95,7 @@ def index():
     rapportages = data.to_dict(orient='records')
     return render_template('index.html', rapportages=rapportages)
 
+
 @app.route('/scores')
 def scores():
     # Maak verbinding met de SQLite-database
@@ -126,11 +128,14 @@ def add_rapportage():
         
         # Converteer score naar int om JSON-serialisatie probleem te vermijden
         score = int(score)
-        
-        # Voeg de rapportage en de voorspelde score toe aan de database
+
+        # Genereer de huidige datum
+        current_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+        # Voeg de rapportage, voorspelde score en de huidige datum toe aan de database
         conn = sqlite3.connect('rapportages.db')
         cursor = conn.cursor()
-        cursor.execute("INSERT INTO rapportages (report, score) VALUES (?, ?)", (report, score))
+        cursor.execute("INSERT INTO rapportages (report, score, datum) VALUES (?, ?, ?)", (report, score, current_date))
         conn.commit()
         conn.close()
         

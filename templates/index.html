@@ -52,11 +52,12 @@
             <tr>
                 <th>Rapport</th>
                 <th>Score</th>
+                <th>Datum</th> <!-- Nieuwe kolom voor datum -->
             </tr>
         </thead>
         <tbody>
             <tr>
-                <td colspan="2">Klik op een score in de diagram om rapportages te bekijken.</td>
+                <td colspan="3">Klik op een score in de diagram om rapportages te bekijken.</td>
             </tr>
         </tbody>
     </table>
@@ -121,13 +122,14 @@
             if (rapportages.length === 0) {
                 const row = tbody.insertRow();
                 const cell = row.insertCell(0);
-                cell.colSpan = 2;
+                cell.colSpan = 3;
                 cell.innerText = 'Geen rapportages gevonden.';
             } else {
                 rapportages.forEach(rapportage => {
                     const row = tbody.insertRow();
                     row.insertCell(0).innerText = rapportage.report;
                     row.insertCell(1).innerText = rapportage.score;
+                    row.insertCell(2).innerText = rapportage.datum; // Toevoegen van de datumcel
                 });
             }
         }
