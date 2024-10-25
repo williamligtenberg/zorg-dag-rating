@@ -61,13 +61,11 @@
             <tr>
                 <th>Rapport</th>
                 <th>Score</th>
-                <th>Datum</th> <!-- Nieuwe kolom voor datum -->
-                <th>Datum</th> <!-- Nieuwe kolom voor datum -->
+                <th>Datum</th> <!-- Enkel de juiste kolom voor datum -->
             </tr>
         </thead>
         <tbody>
             <tr>
-                <td colspan="3">Klik op een score in de diagram om rapportages te bekijken.</td>
                 <td colspan="3">Klik op een score in de diagram om rapportages te bekijken.</td>
             </tr>
         </tbody>
@@ -132,7 +130,7 @@
             tbody.innerHTML = ''; // Clear previous entries
             rapportages.forEach(r => {
                 const row = document.createElement('tr');
-                row.innerHTML = `<td>${r.report}</td><td>${r.score}</td><td>${r.datum}</td>`; // Add datum
+                row.innerHTML = `<td>${r.report}</td><td>${r.score}</td><td>${r.datum}</td>`; // Corrected datum column
                 tbody.appendChild(row);
             });
             if (rapportages.length === 0) {

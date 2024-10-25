@@ -157,7 +157,6 @@ def add_rapportage():
         conn = sqlite3.connect('rapportages.db')
         cursor = conn.cursor()
         cursor.execute("INSERT INTO rapportages (report, score, datum) VALUES (?, ?, ?)", (report, score, current_date))
-        cursor.execute("INSERT INTO rapportages (report, score, datum) VALUES (?, ?, ?)", (report, score, current_date))
         conn.commit()
         conn.close()
         
@@ -193,8 +192,6 @@ def scores_all():
     df = pd.read_sql_query(query, conn)
     conn.close()
     return df.to_json(orient='records')
-
-
 
 if __name__ == '__main__':
     # Start the server
