@@ -42,6 +42,15 @@
     <!-- Knop om naar de rapportage toevoegpagina te gaan -->
     <button onclick="window.location.href='/add-report'">Voeg een nieuwe rapportage toe</button>
 
+    <!-- Datumbereik selectie -->
+    <div>
+        <label for="startDate">Startdatum:</label>
+        <input type="date" id="startDate">
+        <label for="endDate">Einddatum:</label>
+        <input type="date" id="endDate">
+        <button id="filterButton">Filter</button>
+    </div>
+
     <div class="chart-container">
         <canvas id="scoreChart"></canvas>
     </div>
@@ -52,42 +61,50 @@
             <tr>
                 <th>Rapport</th>
                 <th>Score</th>
+                <th>Datum</th> <!-- Nieuwe kolom voor datum -->
             </tr>
         </thead>
         <tbody>
             <tr>
-                <td colspan="2">Klik op een score in de diagram om rapportages te bekijken.</td>
+                <td colspan="3">Klik op een score in de diagram om rapportages te bekijken.</td>
             </tr>
         </tbody>
     </table>
 
     <script>
-        async function fetchScores() {
-            const response = await fetch('/scores');
-            const data = await response.json();
-            return data;
+        let myChart; // Variabele om de Chart.js grafiek op te slaan
+
+        async function fetchScores(startDate, endDate) {
+            const response = await fetch(startDate && endDate ? `/scores/${startDate}/${endDate}` : '/scores');
+            return response.json();
         }
 
-        async function renderChart() {
-            const scoresData = await fetchScores();
+        async function fetchRapportages(score, startDate, endDate) {
+            const response = await fetch(`/rapportages/${score}?start_date=${startDate}&end_date=${endDate}`);
+            return response.json();
+        }
 
-            const labels = [1, 2, 3, 4, 5];
-            const counts = labels.map(label => {
-                const score = scoresData.find(s => s.score === label);
-                return score ? score.count : 0;
-            });
+        async function loadChart(startDate, endDate) {
+            const scoresData = await fetchScores(startDate, endDate);
+            const labels = scoresData.map(data => `Score ${data.score}`);
+            const data = scoresData.map(data => data.count);
 
             const ctx = document.getElementById('scoreChart').getContext('2d');
-            const scoreChart = new Chart(ctx, {
+
+            // Controleer of myChart al bestaat en vernietig het
+            if (myChart) {
+                myChart.destroy();
+            }
+
+            // Maak een nieuwe Chart
+            myChart = new Chart(ctx, {
                 type: 'bar',
                 data: {
                     labels: labels,
                     datasets: [{
-                        label: 'Aantal Rapportages',
-                        data: counts,
+                        label: 'Aantal Rapportages per Score',
+                        data: data,
                         backgroundColor: 'rgba(75, 192, 192, 0.6)',
-                        borderColor: 'rgba(75, 192, 192, 1)',
-                        borderWidth: 1
                     }]
                 },
                 options: {
@@ -96,43 +113,40 @@
                             beginAtZero: true
                         },
                     },
-                    onClick: (event) => {
-                        const activePoints = scoreChart.getElementsAtEventForMode(event, 'nearest', { intersect: true }, false);
+                    onClick: async (evt) => {
+                        const activePoints = myChart.getElementsAtEventForMode(evt, 'nearest', { intersect: true }, false);
                         if (activePoints.length) {
-                            const index = activePoints[0].index;
-                            const score = labels[index];
-                            fetchRapportages(score);
+                            const selectedScore = scoresData[activePoints[0].index].score;
+                            const rapportages = await fetchRapportages(selectedScore, startDate, endDate);
+                            updateTable(rapportages);
                         }
                     }
                 }
             });
         }
 
-        async function fetchRapportages(score) {
-            const response = await fetch(`/rapportages/${score}`);
-            const rapportages = await response.json();
-            updateRapportagesTable(rapportages);
-        }
-
-        function updateRapportagesTable(rapportages) {
-            const tbody = document.getElementById('rapportagesTable').getElementsByTagName('tbody')[0];
-            tbody.innerHTML = '';
-
+        function updateTable(rapportages) {
+            const tbody = document.getElementById('rapportagesTable').querySelector('tbody');
+            tbody.innerHTML = ''; // Clear previous entries
+            rapportages.forEach(r => {
+                const row = document.createElement('tr');
+                row.innerHTML = `<td>${r.report}</td><td>${r.score}</td><td>${r.datum}</td>`; // Add datum
+                tbody.appendChild(row);
+            });
             if (rapportages.length === 0) {
-                const row = tbody.insertRow();
-                const cell = row.insertCell(0);
-                cell.colSpan = 2;
-                cell.innerText = 'Geen rapportages gevonden.';
-            } else {
-                rapportages.forEach(rapportage => {
-                    const row = tbody.insertRow();
-                    row.insertCell(0).innerText = rapportage.report;
-                    row.insertCell(1).innerText = rapportage.score;
-                });
+                tbody.innerHTML = '<tr><td colspan="3">Geen rapportages gevonden.</td></tr>';
             }
         }
 
-        renderChart();
+        // Event listener voor filterknop
+        document.getElementById('filterButton').addEventListener('click', () => {
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            loadChart(startDate, endDate);
+        });
+
+        // Standaard grafiek weergeven
+        loadChart(); // Laat de grafiek van alle rapportages zien bij het laden van de pagina
     </script>
 </body>
 </html>

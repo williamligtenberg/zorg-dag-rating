@@ -11,6 +11,7 @@ from accuracy import off_by_one_accuracy
 import simplemma
 from flask import Flask, render_template, request, jsonify
 import sqlite3
+from datetime import datetime, timedelta
 
 # Data laden vanuit CSV-bestand
 df = pd.read_csv('zorgdata.csv')
@@ -73,15 +74,23 @@ def predict_single_value(report):
 
 
 
+
 ####### HTTP SERVER
 # Create a Flask app
 app = Flask(__name__)
 
-def get_data():
+def get_data(start_date=None, end_date=None):
     # Maak verbinding met de SQLite-database
     conn = sqlite3.connect('rapportages.db')
-    query = "SELECT * FROM rapportages"
-    df = pd.read_sql_query(query, conn)
+
+    if start_date and end_date:
+        query = "SELECT * FROM rapportages WHERE datum BETWEEN ? AND ?"
+        params = (start_date, end_date)
+    else:
+        query = "SELECT * FROM rapportages"
+        params = ()
+
+    df = pd.read_sql_query(query, conn, params=params)
     conn.close()
     return df
 
@@ -105,12 +114,24 @@ def scores():
 
 @app.route('/rapportages/<int:score>')
 def rapportages(score):
+    start_date = request.args.get('start_date')
+    end_date = request.args.get('end_date')
+    
     # Maak verbinding met de SQLite-database
     conn = sqlite3.connect('rapportages.db')
+    
     query = "SELECT * FROM rapportages WHERE score = ?"
-    df = pd.read_sql_query(query, conn, params=(score,))
+    params = [score]
+
+    # Als start- en einddatum zijn opgegeven, voeg deze toe aan de query
+    if start_date and end_date:
+        query += " AND datum BETWEEN ? AND ?"
+        params.extend([start_date, end_date])
+
+    df = pd.read_sql_query(query, conn, params=params)
     conn.close()
     return df.to_json(orient='records')
+
 
 @app.route('/add_rapportage', methods=['POST'])
 def add_rapportage():
@@ -126,11 +147,14 @@ def add_rapportage():
         
         # Converteer score naar int om JSON-serialisatie probleem te vermijden
         score = int(score)
-        
-        # Voeg de rapportage en de voorspelde score toe aan de database
+
+        # Genereer de huidige datum
+        current_date = datetime.now().strftime('%Y-%m-%d')
+
+        # Voeg de rapportage, voorspelde score en de huidige datum toe aan de database
         conn = sqlite3.connect('rapportages.db')
         cursor = conn.cursor()
-        cursor.execute("INSERT INTO rapportages (report, score) VALUES (?, ?)", (report, score))
+        cursor.execute("INSERT INTO rapportages (report, score, datum) VALUES (?, ?, ?)", (report, score, current_date))
         conn.commit()
         conn.close()
         
@@ -143,6 +167,31 @@ def add_rapportage():
 @app.route('/add-report')
 def add_report_page():
     return render_template('add_report.html')
+
+@app.route('/scores/<start_date>/<end_date>')
+def scores_date_range(start_date, end_date):
+    # Maak verbinding met de SQLite-database
+    conn = sqlite3.connect('rapportages.db')
+    query = """
+    SELECT score, COUNT(*) as count 
+    FROM rapportages 
+    WHERE datum BETWEEN ? AND ? 
+    GROUP BY score
+    """
+    df = pd.read_sql_query(query, conn, params=(start_date, end_date))
+    conn.close()
+    return df.to_json(orient='records')
+
+@app.route('/scores')
+def scores_all():
+    # Maak verbinding met de SQLite-database
+    conn = sqlite3.connect('rapportages.db')
+    query = "SELECT score, COUNT(*) as count FROM rapportages GROUP BY score"
+    df = pd.read_sql_query(query, conn)
+    conn.close()
+    return df.to_json(orient='records')
+
+
 
 if __name__ == '__main__':
     # Start the server

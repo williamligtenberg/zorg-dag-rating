@@ -3,42 +3,68 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nieuwe Rapportage Toevoegen</title>
+    <title>Voeg Rapportage Toe</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f9f9f9;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+            background-color: white;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body>
-    <h1>Voeg een nieuwe rapportage toe</h1>
-    <div>
-        <textarea id="newReport" placeholder="Type hier je nieuwe rapportage..." rows="4" cols="50"></textarea>
-        <button onclick="addRapportage()">Voeg rapportage toe</button>
+    <div class="container">
+        <h1>Voeg een Rapportage Toe</h1>
+        <textarea id="report" rows="5" placeholder="Voer hier uw rapportage in..."></textarea>
+        <button id="submitReport">Verzenden</button>
+        <p id="responseMessage"></p>
     </div>
 
     <script>
-async function addRapportage() {
-    const newReport = document.getElementById('newReport').value;
+        document.getElementById('submitReport').addEventListener('click', async () => {
+            const report = document.getElementById('report').value;
+            const response = await fetch('/add_rapportage', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ report })
+            });
 
-    if (newReport.trim() === '') {
-        alert('Vul een geldige rapportage in.');
-        return;
-    }
+            const data = await response.json();
+            const messageElement = document.getElementById('responseMessage');
 
-    const response = await fetch('/add_rapportage', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ report: newReport })
-    });
+            if (data.success) {
+                messageElement.textContent = `Rapportage toegevoegd met score: ${data.score}`;
+                document.getElementById('report').value = ''; // Clear the input field
 
-    const result = await response.json();
-
-    if (result.success) {
-        alert('Rapportage succesvol toegevoegd met berekende score!');
-        document.getElementById('newReport').value = '';  // Reset het invoerveld
-        window.location.href = '/';  // Redirect naar de indexpagina
-    } else {
-        alert('Er was een probleem bij het toevoegen van de rapportage.');
-    }
-}
+                // Redirect naar de hoofdpagina na 2 seconden
+                setTimeout(() => {
+                    window.location.href = '/'; // Terug naar de hoofdpagina
+                }, 2000);
+            } else {
+                messageElement.textContent = `Fout: ${data.message}`;
+            }
+        });
     </script>
 </body>
 </html>
